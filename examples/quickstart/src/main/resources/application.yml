@@ -1,0 +1,22 @@
+server:
+  port: ${EXAMPLE_PORT:8090}
+
+alfresco:
+  url: ${ALFRESCO_URL:http://localhost:8082}
+  username: ${ALFRESCO_USERNAME:admin}
+  password: ${ALFRESCO_PASSWORD:admin}
+  retry:
+    enabled: true
+    max-attempts: 3
+    initial-delay: 200ms
+    max-delay: 2s
+  diagnostics:
+    enabled: ${ALFRESCO_DIAGNOSTICS:false}
+
+spring:
+  application:
+    name: alfresco-community-spring-services-quickstart
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB

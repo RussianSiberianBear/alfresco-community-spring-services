@@ -1,0 +1,33 @@
+{
+  "apis": {
+    "core": {
+      "operations": 182,
+      "definitions": 184,
+      "basePath": "/alfresco/api/-default-/public/alfresco/versions/1"
+    },
+    "auth": {
+      "operations": 3,
+      "definitions": 6,
+      "basePath": "/alfresco/api/-default-/public/authentication/versions/1"
+    },
+    "search": {
+      "operations": 1,
+      "definitions": 39,
+      "basePath": "/alfresco/api/-default-/public/search/versions/1"
+    },
+    "discovery": {
+      "operations": 1,
+      "definitions": 9,
+      "basePath": "/alfresco/api"
+    }
+  },
+  "totalOperations": 187,
+  "totalDefinitions": 238,
+  "generatedApiInterfaces": 26,
+  "targetJava": "21",
+  "targetSpringBoot": "4.1.0",
+  "springHttpClient": "RestClient + HTTP Service Clients (@ImportHttpServices)",
+  "artifactVersion": "1.0.0",
+  "groupId": "pro.abgrid",
+  "artifactId": "alfresco-community-spring-services"
+}

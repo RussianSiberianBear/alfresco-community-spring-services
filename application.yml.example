@@ -1,0 +1,15 @@
+alfresco:
+  # Only this value identifies the Alfresco server.
+  # Change it here when the server/port changes.
+  # Только это значение идентифицирует сервер Alfresco.
+  # Измените его здесь при изменении сервера/порта.
+  url: "http://localhost:8082"
+  username: admin
+  password: admin
+  retry:
+    enabled: true
+    max-attempts: 3
+    initial-delay: 200ms
+    max-delay: 2s
+  diagnostics:
+    enabled: false
