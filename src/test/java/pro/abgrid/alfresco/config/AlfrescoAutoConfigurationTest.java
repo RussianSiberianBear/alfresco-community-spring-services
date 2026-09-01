@@ -11,6 +11,8 @@ class AlfrescoAutoConfigurationTest {
     void derivesAllApiBaseUrlsFromSingleServerUrl() {
         assertThat(AlfrescoAutoConfiguration.resolveBaseUrl("http://localhost:8082/", "alfresco"))
                 .isEqualTo("http://localhost:8082/alfresco/api/-default-/public/alfresco/versions/1");
+        assertThat(AlfrescoAutoConfiguration.resolveBaseUrl("http://localhost:8082", "alfresco-streaming"))
+                .isEqualTo("http://localhost:8082/alfresco/api/-default-/public/alfresco/versions/1");
         assertThat(AlfrescoAutoConfiguration.resolveBaseUrl("http://localhost:8082", "alfresco-auth"))
                 .isEqualTo("http://localhost:8082/alfresco/api/-default-/public/authentication/versions/1");
         assertThat(AlfrescoAutoConfiguration.resolveBaseUrl("https://example.org", "alfresco-search"))

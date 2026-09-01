@@ -25,6 +25,10 @@
 - A single `alfresco.url` configures the core, authentication, search and discovery HTTP Service base URLs automatically.
 - Bundled Swagger definitions contain only live-verified compatibility corrections for ACS Community 26.2 behavior.
 - `UploadRequest.properties` is forwarded as multipart QName fields; live integration coverage verifies `cm:title` and `cm:description`.
+- Uses one shared Java 21 JDK `HttpClient` across all Alfresco HTTP Service groups for connection reuse.
+- Adds configurable `alfresco.http.connect-timeout` (default `5s`) and `alfresco.http.read-timeout` (default `30s`).
+- Adds constant-memory streaming content APIs: `StreamingUploadRequest` plus `AlfrescoContentService.downloadTo(OutputStream/Path)`.
+- Adds an optional Actuator `alfrescoHealthIndicator`, automatically available only when Actuator is present in the consuming application.
 
 ### Search and convenience models
 

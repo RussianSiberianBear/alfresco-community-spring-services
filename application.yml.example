@@ -6,6 +6,12 @@ alfresco:
   url: "http://localhost:8082"
   username: admin
   password: admin
+  http:
+    connect-timeout: 5s
+    read-timeout: 30s
+    streaming-read-timeout: 10m
+  health:
+    enabled: true
   retry:
     enabled: true
     max-attempts: 3

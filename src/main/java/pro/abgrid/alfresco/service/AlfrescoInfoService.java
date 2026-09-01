@@ -29,7 +29,9 @@ public class AlfrescoInfoService {
         return new AlfrescoConnectionInfo(properties.getUrl(), properties.getUsername(),
                 hasText(properties.getUsername()) && hasText(properties.getPassword()),
                 properties.getRetry().isEnabled(), properties.getRetry().getMaxAttempts(),
-                properties.getDiagnostics().isEnabled());
+                properties.getDiagnostics().isEnabled(),
+                properties.getHttp().getConnectTimeout(), properties.getHttp().getReadTimeout(),
+                properties.getHttp().getStreamingReadTimeout(), properties.getHealth().isEnabled());
     }
     private static boolean hasText(String value){return value!=null&&!value.isBlank();}
 }

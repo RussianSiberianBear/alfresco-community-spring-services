@@ -10,11 +10,14 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.support.RestClientHttpServiceGroupConfigurer;
 import org.springframework.web.service.registry.ImportHttpServices;
 
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +98,7 @@ import java.util.Set;
  * <p><strong>RU:</strong> Spring Boot auto-configuration библиотеки. Создаёт low-level HTTP Service clients для core/auth/search/discovery API, настраивает Basic Auth, единый разбор ошибок, безопасный retry и diagnostics, а также импортирует high-level сервисы. В прикладном проекте достаточно dependency и настроек {@code alfresco.*}; вручную создавать эти beans обычно не требуется.</p>
  * <p><strong>EN:</strong> Spring Boot auto-configuration for the library. Creates low-level HTTP Service clients for core/auth/search/discovery APIs, configures Basic Auth, shared error parsing, safe retry and diagnostics, and imports the high-level services. Applications normally only need the dependency and {@code alfresco.*} settings; these beans do not need to be created manually.</p>
  */
+@ImportHttpServices(group = "alfresco-streaming", types = {StreamingNodeUploadApi.class, NodeContentStreamingApi.class})
 @ImportHttpServices(group = "alfresco-auth", types = AuthenticationApi.class)
 @ImportHttpServices(group = "alfresco-search", types = SearchApi.class)
 @ImportHttpServices(group = "alfresco-discovery", types = DiscoveryApi.class)
@@ -109,6 +113,7 @@ public class AlfrescoAutoConfiguration {
 
     private static final Set<String> ALFRESCO_GROUPS = Set.of(
             "alfresco",
+            "alfresco-streaming",
             "alfresco-auth",
             "alfresco-search",
             "alfresco-discovery"
@@ -116,14 +121,23 @@ public class AlfrescoAutoConfiguration {
 
     private static final Map<String, String> API_PATHS = Map.of(
             "alfresco", "/alfresco/api/-default-/public/alfresco/versions/1",
+            "alfresco-streaming", "/alfresco/api/-default-/public/alfresco/versions/1",
             "alfresco-auth", "/alfresco/api/-default-/public/authentication/versions/1",
             "alfresco-search", "/alfresco/api/-default-/public/search/versions/1",
             "alfresco-discovery", "/alfresco/api"
     );
 
+    @Bean(name = "alfrescoHttpClient")
+    HttpClient alfrescoHttpClient(AlfrescoProperties properties) {
+        return HttpClient.newBuilder()
+                .connectTimeout(properties.getHttp().getConnectTimeout())
+                .build();
+    }
+
     @Bean
     RestClientHttpServiceGroupConfigurer alfrescoHttpServiceGroupConfigurer(
-            AlfrescoProperties properties, ObjectMapper objectMapper) {
+            AlfrescoProperties properties, ObjectMapper objectMapper,
+            @Qualifier("alfrescoHttpClient") HttpClient alfrescoHttpClient) {
 
         AlfrescoErrorParser errorParser = new AlfrescoErrorParser(objectMapper);
         AlfrescoRetryInterceptor retryInterceptor = new AlfrescoRetryInterceptor(properties);
@@ -137,8 +151,19 @@ public class AlfrescoAutoConfiguration {
             if (properties.getUrl() != null && !properties.getUrl().isBlank()) {
                 builder.baseUrl(resolveBaseUrl(properties.getUrl(), group.name()));
             }
-            builder.requestInterceptor(retryInterceptor);
-            builder.requestInterceptor(diagnosticsInterceptor);
+
+            JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(alfrescoHttpClient);
+            requestFactory.setReadTimeout("alfresco-streaming".equals(group.name())
+                    ? properties.getHttp().getStreamingReadTimeout()
+                    : properties.getHttp().getReadTimeout());
+            builder.requestFactory(requestFactory);
+
+            // ClientHttpRequestInterceptor exposes request bodies as byte[], so applying it
+            // to multipart streaming uploads would force full in-memory buffering.
+            if (!"alfresco-streaming".equals(group.name())) {
+                builder.requestInterceptor(retryInterceptor);
+                builder.requestInterceptor(diagnosticsInterceptor);
+            }
 
             builder.defaultHeaders(headers -> headers.setBasicAuth(
                     properties.getUsername(),

@@ -58,7 +58,7 @@ The smoke test starts the application context using only `alfresco.url`, `alfres
 The high-level call behind this endpoint is:
 
 ```java
-alfresco.content().upload(new UploadRequest(...));
+alfresco.content().upload(new StreamingUploadRequest(...));
 ```
 
 Alfresco supports special parent IDs such as `-my-`; alternatively pass a real folder node ID.
@@ -68,7 +68,7 @@ curl.exe -X POST "http://localhost:8090/api/alfresco/documents?parentId=-my-&aut
   -F "file=@README.md"
 ```
 
-The example passes `cm:title` and `cm:description` through `UploadRequest.properties`; the high-level upload service forwards arbitrary multipart QName properties to ACS.
+The example uses `MultipartFile.getResource()` with `StreamingUploadRequest`, so the controller does not call `MultipartFile.getBytes()` before sending content to Alfresco. It also passes `cm:title` and `cm:description` as arbitrary multipart QName properties.
 
 Response example:
 
@@ -103,7 +103,7 @@ Uses `alfresco.metadata().properties(nodeId)`.
 curl -OJ "http://localhost:8090/api/alfresco/documents/{nodeId}/content"
 ```
 
-Uses `alfresco.content().download(nodeId)` and maps `ContentResource` to an ordinary HTTP download response.
+Uses `alfresco.content().downloadTo(nodeId, outputStream)` through Spring MVC `StreamingResponseBody`, so the complete Alfresco response is not first collected into a `byte[]`.
 
 ### Search
 
@@ -143,3 +143,13 @@ For multiline commands in `cmd.exe`, replace the trailing `\` with `^`. For exam
 curl.exe -X POST "http://localhost:8090/api/alfresco/documents?parentId=-my-&autoRename=true&title=Quickstart" ^
   -F "file=@README.md"
 ```
+
+## Alfresco health
+
+The quickstart includes Spring Boot Actuator to demonstrate the library's optional health integration. With the application running:
+
+```bash
+curl "http://localhost:8090/actuator/health"
+```
+
+The `alfresco` contributor performs a real Discovery request to the configured repository. Disable it with `ALFRESCO_HEALTH_ENABLED=false`.

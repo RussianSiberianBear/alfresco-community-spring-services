@@ -4,6 +4,7 @@ import pro.abgrid.alfresco.dto.core.NodeEntry;
 import pro.abgrid.alfresco.exception.AlfrescoApiException;
 import pro.abgrid.alfresco.model.ContentResource;
 import pro.abgrid.alfresco.model.UploadRequest;
+import pro.abgrid.alfresco.model.StreamingUploadRequest;
 import pro.abgrid.alfresco.service.content.AlfrescoContentService;
 import pro.abgrid.alfresco.service.AlfrescoClient;
 import pro.abgrid.alfresco.service.AlfrescoInfoService;
@@ -13,9 +14,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.core.io.InputStreamResource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -70,6 +74,34 @@ class AlfrescoContentIntegrationTest extends AlfrescoIntegrationTestBase {
         }
     }
 
+    @Test
+    void streamingUploadAndDownloadAvoidsByteArrayApi() throws Exception {
+        String folderName = "alfresco-community-spring-services-stream-it-" + System.currentTimeMillis();
+        NodeEntry folder = content.createFolder(COMPANY_HOME, folderName);
+        String folderId = folder.getEntry().getId();
+        byte[] source = ("streaming-content-" + UUID.randomUUID()).repeat(1024)
+                .getBytes(StandardCharsets.UTF_8);
+        String fileName = "streaming.txt";
+
+        try {
+            InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(source));
+            NodeEntry uploaded = content.upload(new StreamingUploadRequest(
+                    folderId, fileName, resource, "cm:content", null,
+                    Map.of("cm:title", "Streaming integration upload"),
+                    true, true, true));
+            String nodeId = uploaded.getEntry().getId();
+
+            ByteArrayOutputStream target = new ByteArrayOutputStream();
+            long copied = content.downloadTo(nodeId, target);
+
+            assertThat(copied).isEqualTo(source.length);
+            assertThat(target.toByteArray()).isEqualTo(source);
+            content.delete(nodeId);
+        } finally {
+            content.deletePermanently(folderId);
+        }
+    }
+
 
     @Test
     void stableFacadeAndSanitizedInfoAreAvailable() {
@@ -78,6 +110,9 @@ class AlfrescoContentIntegrationTest extends AlfrescoIntegrationTestBase {
         assertThat(client.trash()).isNotNull();
         assertThat(info.connectionInfo().credentialsConfigured()).isTrue();
         assertThat(info.connectionInfo().username()).isEqualTo(USERNAME);
+        assertThat(info.connectionInfo().connectTimeout()).isNotNull();
+        assertThat(info.connectionInfo().readTimeout()).isNotNull();
+        assertThat(info.connectionInfo().streamingReadTimeout()).isNotNull();
         assertThat(java.util.Arrays.stream(
                 info.connectionInfo().getClass().getRecordComponents())
                 .map(java.lang.reflect.RecordComponent::getName))

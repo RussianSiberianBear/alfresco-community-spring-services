@@ -7,6 +7,7 @@ import pro.abgrid.alfresco.dto.core.VersionPaging;
 import pro.abgrid.alfresco.model.ContentResource;
 import pro.abgrid.alfresco.model.TransformationResult;
 import pro.abgrid.alfresco.model.UploadRequest;
+import pro.abgrid.alfresco.model.StreamingUploadRequest;
 import pro.abgrid.alfresco.model.VersionRequest;
 import pro.abgrid.alfresco.model.PermissionGrant;
 import pro.abgrid.alfresco.model.PermissionSnapshot;
@@ -21,6 +22,9 @@ import pro.abgrid.alfresco.service.rating.AlfrescoRatingService;
 import pro.abgrid.alfresco.service.favorite.AlfrescoFavoriteService;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -84,6 +88,14 @@ public class AlfrescoDocumentService {
      */
 
     public NodeEntry upload(UploadRequest request) { return content.upload(request); }
+
+    /**
+     * <p><strong>RU:</strong> Потоково загружает документ без предварительной материализации содержимого в {@code byte[]}.</p>
+     * <p><strong>EN:</strong> Streams a document upload without materializing the content into a {@code byte[]} first.</p>
+     * @param request RU: параметры потоковой загрузки. EN: streaming upload parameters.
+     * @return RU: созданный узел. EN: created node.
+     */
+    public NodeEntry upload(StreamingUploadRequest request) { return content.upload(request); }
         /**
      * <p><strong>RU:</strong> получает бинарное содержимое из Alfresco для передачи клиенту, сохранения или дальнейшей обработки.</p>
      * <p><strong>EN:</strong> retrieves binary content from Alfresco for client delivery, storage, or further processing.</p>
@@ -93,6 +105,26 @@ public class AlfrescoDocumentService {
      */
 
     public ContentResource download(String nodeId) { return content.download(nodeId); }
+
+    /**
+     * <p><strong>RU:</strong> Потоково копирует содержимое документа в указанный поток.</p>
+     * <p><strong>EN:</strong> Streams document content into the supplied output stream.</p>
+     * @param nodeId RU: идентификатор узла. EN: node identifier.
+     * @param target RU: целевой поток. EN: target stream.
+     * @return RU: число скопированных байт. EN: copied byte count.
+     * @throws IOException RU: при ошибке ввода-вывода. EN: on I/O failure.
+     */
+    public long downloadTo(String nodeId, OutputStream target) throws IOException { return content.downloadTo(nodeId, target); }
+
+    /**
+     * <p><strong>RU:</strong> Потоково сохраняет содержимое документа в файл.</p>
+     * <p><strong>EN:</strong> Streams document content to a file.</p>
+     * @param nodeId RU: идентификатор узла. EN: node identifier.
+     * @param target RU: целевой файл. EN: target file.
+     * @return RU: число записанных байт. EN: written byte count.
+     * @throws IOException RU: при ошибке ввода-вывода. EN: on I/O failure.
+     */
+    public long downloadTo(String nodeId, Path target) throws IOException { return content.downloadTo(nodeId, target); }
         /**
      * <p><strong>RU:</strong> изменяет имя узла, не меняя его идентификатор.</p>
      * <p><strong>EN:</strong> changes a node name without changing its identifier.</p>

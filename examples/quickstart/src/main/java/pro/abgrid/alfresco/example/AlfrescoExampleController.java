@@ -2,8 +2,7 @@ package pro.abgrid.alfresco.example;
 
 import pro.abgrid.alfresco.dto.core.Node;
 import pro.abgrid.alfresco.dto.core.NodeEntry;
-import pro.abgrid.alfresco.model.ContentResource;
-import pro.abgrid.alfresco.model.UploadRequest;
+import pro.abgrid.alfresco.model.StreamingUploadRequest;
 import pro.abgrid.alfresco.model.search.SearchResultPage;
 import pro.abgrid.alfresco.service.AlfrescoClient;
 import org.springframework.http.ContentDisposition;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,10 +42,10 @@ public class AlfrescoExampleController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description) throws IOException {
 
-        UploadRequest request = new UploadRequest(
+        StreamingUploadRequest request = new StreamingUploadRequest(
                 parentId,
                 file.getOriginalFilename(),
-                file.getBytes(),
+                file.getResource(),
                 "cm:content",
                 List.of("cm:titled"),
                 uploadProperties(title, description),
@@ -76,20 +76,22 @@ public class AlfrescoExampleController {
     }
 
     @GetMapping("/documents/{nodeId}/content")
-    public ResponseEntity<byte[]> download(@PathVariable String nodeId) {
-        ContentResource resource = alfresco.content().download(nodeId);
-        MediaType mediaType = safeMediaType(resource.mimeType());
-        String filename = resource.filename() == null ? nodeId : resource.filename();
+    public ResponseEntity<StreamingResponseBody> download(@PathVariable String nodeId) {
+        Node node = alfresco.content().get(nodeId).getEntry();
+        String mimeType = node != null && node.getContent() != null
+                ? node.getContent().getMimeType()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String filename = node != null && node.getName() != null ? node.getName() : nodeId;
 
+        StreamingResponseBody body = output -> alfresco.content().downloadTo(nodeId, output);
         return ResponseEntity.ok()
-                .contentType(mediaType)
-                .contentLength(resource.size())
+                .contentType(safeMediaType(mimeType))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment()
                                 .filename(filename, StandardCharsets.UTF_8)
                                 .build()
                                 .toString())
-                .body(resource.content());
+                .body(body);
     }
 
     @GetMapping("/search")

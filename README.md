@@ -66,15 +66,28 @@ alfresco:
   url: http://localhost:8082
   username: admin
   password: admin
+  http:
+    connect-timeout: 5s
+    read-timeout: 30s
+  health:
+    enabled: true
 ```
 
 `alfresco.url` is the ACS server root. The library derives the core, authentication, search and discovery REST base URLs automatically; applications do not need to duplicate those paths in `spring.http.serviceclient.*`.
+
+All Alfresco HTTP Service groups share one Java 21 JDK `HttpClient`, so persistent connections are reused across requests without an additional Apache HTTP client dependency. The default connect timeout is 5 seconds and the default read timeout is 30 seconds; both are configurable under `alfresco.http.*`.
+
+If Spring Boot Actuator is present in the consuming application, an `alfrescoHealthIndicator` is registered automatically and checks the repository through the Discovery API. Set `alfresco.health.enabled=false` to disable it. Actuator remains an optional dependency of the library.
 
 ## Examples
 
 ```java
 NodeEntry file = documents.upload(new UploadRequest(folderId, "contract.docx", bytes));
-ContentResource content = documents.download(file.getEntry().getId());
+ContentResource content = documents.download(file.getEntry().getId()); // convenient for small files
+
+NodeEntry large = contentService.upload(new StreamingUploadRequest(folderId, "archive.zip", fileResource));
+contentService.downloadTo(large.getEntry().getId(), outputStream); // constant-memory streaming path
+
 TransformationResult pdf = documents.toPdf(file.getEntry().getId());
 SearchPage result = search.afts("cm:name:'*.pdf'", 0, 50);
 ```
@@ -332,6 +345,13 @@ alfresco:
 
 The retry policy is intentionally conservative: write operations are not repeated automatically because a connection failure does not prove that ACS failed to apply the write.
 
+## HTTP transport, streaming and health
+
+The 1.0.0 transport layer uses one shared JDK `HttpClient` for all Alfresco HTTP Service groups. This gives connection reuse/keep-alive without introducing an Apache HttpClient dependency. `alfresco.http.connect-timeout` defaults to `5s`; `alfresco.http.read-timeout` defaults to `30s`.
+
+For large content, prefer `StreamingUploadRequest` and `AlfrescoContentService.downloadTo(...)`. Streaming upload accepts a Spring `Resource`; streaming download copies directly to an application `OutputStream` or `Path`. The existing `UploadRequest` and `ContentResource` byte-array methods remain convenient for small files.
+
+When Actuator is on the application classpath, the optional `alfrescoHealthIndicator` performs a lightweight Discovery request. It reports only reachability and exception type, not credentials, request bodies or exception messages. Disable it with `alfresco.health.enabled=false`.
 
 ## Stable public API
 

@@ -54,3 +54,11 @@ It builds the main JAR, sources JAR and Javadoc JAR and runs the tests plus stri
 The POM now contains an **opt-in** `central-release` profile using the official `org.sonatype.central:central-publishing-maven-plugin:0.11.0`. Normal builds do not activate it, and Central publication requires manual approval (`autoPublish=false`).
 
 Before the first real Maven Central publication, the project still needs deliberate values for the public project URL, distribution license, developer/organization identity and final SCM coordinates. Those values are intentionally not guessed. Maven Central also requires GPG/PGP signatures; signing should be configured only after the public release identity is settled, with no private key or passphrase committed to the project.
+
+## 1.0.0 production transport baseline
+
+- Shared JDK `HttpClient` with connection reuse across all Alfresco API groups.
+- Configurable connect/read timeouts under `alfresco.http.*`.
+- Streaming upload/download APIs for large content without mandatory `byte[]` materialization.
+- Optional Spring Boot health contributor when Actuator is present.
+- Live integration coverage includes streaming upload/download against Alfresco Community Edition 26.2.

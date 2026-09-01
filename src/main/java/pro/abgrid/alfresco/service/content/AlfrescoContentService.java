@@ -1,14 +1,26 @@
 package pro.abgrid.alfresco.service.content;
 
+import pro.abgrid.alfresco.api.NodeContentStreamingApi;
 import pro.abgrid.alfresco.api.NodeUploadApi;
+import pro.abgrid.alfresco.api.StreamingNodeUploadApi;
 import pro.abgrid.alfresco.api.NodesApi;
 import pro.abgrid.alfresco.dto.core.*;
 import pro.abgrid.alfresco.model.ContentResource;
 import pro.abgrid.alfresco.model.UploadRequest;
+import pro.abgrid.alfresco.model.StreamingUploadRequest;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 
@@ -20,15 +32,26 @@ import java.util.Map;
 public class AlfrescoContentService {
     private final NodesApi nodes;
     private final NodeUploadApi upload;
+    private final StreamingNodeUploadApi streamingUpload;
+    private final NodeContentStreamingApi streamingContent;
         /**
      * <p><strong>RU:</strong> создаёт сервис и получает его зависимости через Spring DI; обычно этот конструктор не вызывается прикладным кодом напрямую.</p>
      * <p><strong>EN:</strong> creates the service with dependencies supplied by Spring DI; application code normally does not call this constructor directly.</p>
      *
      * @param nodes RU: зависимость `nodes`, используемая сервисом для выполнения операций Alfresco. EN: `nodes` dependency used by the service to perform Alfresco operations.
      * @param upload RU: зависимость `upload`, используемая сервисом для выполнения операций Alfresco. EN: `upload` dependency used by the service to perform Alfresco operations.
+     * @param streamingUpload RU: потоковый multipart-клиент загрузки. EN: streaming multipart upload client.
+     * @param streamingContent RU: потоковый клиент содержимого узлов. EN: streaming node-content client.
      */
 
-    public AlfrescoContentService(NodesApi nodes, NodeUploadApi upload) { this.nodes=nodes; this.upload=upload; }
+    public AlfrescoContentService(
+            NodesApi nodes, NodeUploadApi upload, StreamingNodeUploadApi streamingUpload,
+            NodeContentStreamingApi streamingContent) {
+        this.nodes = nodes;
+        this.upload = upload;
+        this.streamingUpload = streamingUpload;
+        this.streamingContent = streamingContent;
+    }
 
         /**
      * <p><strong>RU:</strong> получает актуальное представление объекта из Alfresco; подходит для чтения его серверного состояния и метаданных.</p>
@@ -104,17 +127,41 @@ public class AlfrescoContentService {
                 return r.filename();
             }
         };
+        return uploadResource(
+                r.parentId(), r.filename(), resource, r.nodeType(), r.aspects(), r.properties(),
+                r.autoRename(), r.majorVersion(), r.versioningEnabled(), false);
+    }
 
+    /**
+     * <p><strong>RU:</strong> Загружает документ потоково из Spring {@link Resource} без предварительной материализации всего файла в {@code byte[]}.</p>
+     * <p><strong>EN:</strong> Uploads a document from a Spring {@link Resource} without materializing the complete file into a {@code byte[]} first.</p>
+     *
+     * @param request RU: параметры потоковой загрузки. EN: streaming upload parameters.
+     * @return RU: созданный узел Alfresco. EN: created Alfresco node.
+     */
+    public NodeEntry upload(StreamingUploadRequest request) {
+        return uploadResource(
+                request.parentId(), request.filename(), request.content(), request.nodeType(),
+                request.aspects(), request.properties(), request.autoRename(),
+                request.majorVersion(), request.versioningEnabled(), true);
+    }
+
+    private NodeEntry uploadResource(
+            String parentId, String filename, Resource resource, String nodeType,
+            List<String> aspects, Map<String, Object> properties,
+            Boolean autoRename, Boolean majorVersion, Boolean versioningEnabled, boolean streaming) {
         MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-        parts.add("filedata", resource);
-        addPart(parts, "name", r.filename());
-        addPart(parts, "nodeType", r.nodeType());
-        if (r.aspects() != null && !r.aspects().isEmpty()) {
-            parts.add("aspectNames", String.join(",", r.aspects()));
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentDispositionFormData("filedata", filename);
+        parts.add("filedata", new HttpEntity<>(resource, fileHeaders));
+        addPart(parts, "name", filename);
+        addPart(parts, "nodeType", nodeType);
+        if (aspects != null && !aspects.isEmpty()) {
+            parts.add("aspectNames", String.join(",", aspects));
         }
 
-        if (r.properties() != null) {
-            r.properties().forEach((name, value) -> {
+        if (properties != null) {
+            properties.forEach((name, value) -> {
                 if (name != null && !name.isBlank() && value != null) {
                     if (value instanceof Iterable<?> values) {
                         values.forEach(item -> {
@@ -129,13 +176,9 @@ public class AlfrescoContentService {
             });
         }
 
-        return upload.upload(
-                r.parentId(),
-                r.autoRename(),
-                r.majorVersion(),
-                r.versioningEnabled(),
-                parts
-        );
+        return streaming
+                ? streamingUpload.upload(parentId, autoRename, majorVersion, versioningEnabled, parts)
+                : upload.upload(parentId, autoRename, majorVersion, versioningEnabled, parts);
     }
 
     private static void addPart(MultiValueMap<String, Object> parts, String name, Object value) {
@@ -155,6 +198,43 @@ public class AlfrescoContentService {
         NodeEntry n=get(nodeId); Node x=n.getEntry(); byte[] data=nodes.getNodeContent(nodeId,true,null,null);
         String mime=x!=null&&x.getContent()!=null?x.getContent().getMimeType():"application/octet-stream";
         return new ContentResource(data,x==null?null:x.getName(),mime);
+    }
+
+    /**
+     * <p><strong>RU:</strong> Потоково копирует содержимое узла в предоставленный {@link OutputStream}. Метод не закрывает целевой поток.</p>
+     * <p><strong>EN:</strong> Streams node content into the supplied {@link OutputStream}. The target stream is not closed by this method.</p>
+     *
+     * @param nodeId RU: идентификатор узла Alfresco. EN: Alfresco node identifier.
+     * @param target RU: целевой поток приложения. EN: application target stream.
+     * @return RU: количество скопированных байт. EN: number of copied bytes.
+     * @throws IOException RU: при ошибке чтения или записи потока. EN: if reading or writing the stream fails.
+     */
+    public long downloadTo(String nodeId, OutputStream target) throws IOException {
+        if (target == null) {
+            throw new IllegalArgumentException("target must not be null");
+        }
+        try (InputStream input = streamingContent.getNodeContentStream(nodeId, true, null, null)) {
+            return input.transferTo(target);
+        }
+    }
+
+    /**
+     * <p><strong>RU:</strong> Потоково сохраняет содержимое узла в файл, заменяя существующий файл.</p>
+     * <p><strong>EN:</strong> Streams node content to a file, replacing an existing file.</p>
+     *
+     * @param nodeId RU: идентификатор узла Alfresco. EN: Alfresco node identifier.
+     * @param target RU: путь к целевому файлу. EN: target file path.
+     * @return RU: количество записанных байт. EN: number of written bytes.
+     * @throws IOException RU: при ошибке файлового ввода-вывода. EN: if file I/O fails.
+     */
+    public long downloadTo(String nodeId, Path target) throws IOException {
+        if (target == null) {
+            throw new IllegalArgumentException("target must not be null");
+        }
+        try (OutputStream output = Files.newOutputStream(
+                target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+            return downloadTo(nodeId, output);
+        }
     }
         /**
      * <p><strong>RU:</strong> выполняет high-level операцию `replaceContent` над Alfresco и скрывает детали generated REST-клиента от прикладного кода.</p>

@@ -38,6 +38,13 @@
             <artifactId>spring-boot-starter-json</artifactId>
         </dependency>
 
+        <!-- Optional: exposes Alfresco reachability in the consuming application's Actuator health endpoint. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Configuration processor for IDE autocomplete -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

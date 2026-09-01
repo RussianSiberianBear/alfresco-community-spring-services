@@ -1,1 +1,2 @@
 pro.abgrid.alfresco.config.AlfrescoAutoConfiguration
+pro.abgrid.alfresco.config.AlfrescoActuatorAutoConfiguration

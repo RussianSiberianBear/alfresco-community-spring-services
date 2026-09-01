@@ -5,6 +5,12 @@ alfresco:
   url: ${ALFRESCO_URL:http://localhost:8082}
   username: ${ALFRESCO_USERNAME:admin}
   password: ${ALFRESCO_PASSWORD:admin}
+  http:
+    connect-timeout: ${ALFRESCO_CONNECT_TIMEOUT:5s}
+    read-timeout: ${ALFRESCO_READ_TIMEOUT:30s}
+    streaming-read-timeout: ${ALFRESCO_STREAMING_READ_TIMEOUT:10m}
+  health:
+    enabled: ${ALFRESCO_HEALTH_ENABLED:true}
   retry:
     enabled: true
     max-attempts: 3
