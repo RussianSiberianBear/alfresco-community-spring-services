@@ -1,10 +1,12 @@
+<a id="russian-version"></a>
+
 # Alfresco Community Spring Services 1.0.0
 
 Высокоуровневый интеграционный слой для Alfresco Community Edition на
 Spring Boot 4.1 / Java 21, построенный поверх сгенерированного
 типизированного REST-клиента Alfresco.
 
-> **Русская версия** · [English version below](#english-version)
+> **Русская версия** · [English version ↓](#english-version)
 
 ## Архитектура
 
@@ -559,7 +561,11 @@ Edition 26.2.0.
 
 ------------------------------------------------------------------------
 
-\`# English version
+<a id="english-version"></a>
+
+> [↑ Русская версия](#russian-version)
+
+# English version
 
 # Alfresco Community Spring Services 1.0.0
 
