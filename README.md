@@ -25,29 +25,29 @@ Spring Boot 4.1 / Java 21, построенный поверх сгенерир�
 стеке Docker Compose. Это **проверенные версии тестового окружения**, а
 не обязательные транзитивные зависимости библиотеки.
 
-  -------------------------------------------------------------------------------------------------------
-  Компонент                           Проверенный образ / версия
-  ----------------------------------- -------------------------------------------------------------------
-  `alfresco`                          `docker.io/alfresco/alfresco-content-repository-community:26.2.0`
+  --------------------------------------------------------------------------------------------
+  Компонент                Проверенный образ / версия
+  ------------------------ -------------------------------------------------------------------
+  `alfresco`               `docker.io/alfresco/alfresco-content-repository-community:26.2.0`
 
-  `transform-core-aio`                `alfresco/alfresco-transform-core-aio:5.4.3`
+  `transform-core-aio`     `alfresco/alfresco-transform-core-aio:5.4.3`
 
-  `share`                             `docker.io/alfresco/alfresco-share:26.2.0`
+  `share`                  `docker.io/alfresco/alfresco-share:26.2.0`
 
-  `postgres`                          `postgres:17.9`
+  `postgres`               `postgres:17.9`
 
-  `elasticsearch`                     `elasticsearch:8.17.10`
+  `elasticsearch`          `elasticsearch:8.17.10`
 
-  `kibana`                            `kibana:8.17.10`
+  `kibana`                 `kibana:8.17.10`
 
-  `batch-indexing`                    `docker.io/alfresco/alfresco-elasticsearch-batch-indexing:5.7.0`
+  `batch-indexing`         `docker.io/alfresco/alfresco-elasticsearch-batch-indexing:5.7.0`
 
-  `activemq`                          `docker.io/alfresco/alfresco-activemq:6.2.6-jre17-rockylinux8`
+  `activemq`               `docker.io/alfresco/alfresco-activemq:6.2.6-jre17-rockylinux8`
 
-  `content-app`                       `alfresco/alfresco-content-app:8.0.0`
+  `content-app`            `alfresco/alfresco-content-app:8.0.0`
 
-  `control-center`                    `quay.io/alfresco/alfresco-control-center:11.0.0`
-  -------------------------------------------------------------------------------------------------------
+  `control-center`         `quay.io/alfresco/alfresco-control-center:11.0.0`
+  --------------------------------------------------------------------------------------------
 
 **Traefik (прокси) --- 3.6**
 
@@ -178,20 +178,21 @@ mvn clean verify
 
 Успешная сборка должна создать в `target/` следующие артефакты:
 
-  --------------------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------------
   Артефакт                                                 Назначение
-  -------------------------------------------------------- -----------------------------------
+  -------------------------------------------------------- --------------------------
   `alfresco-community-spring-services-1.0.0.jar`           Основной JAR библиотеки,
-                                                           используемый как зависимость
-                                                           приложения.
+                                                           используемый как
+                                                           зависимость приложения.
 
-  `alfresco-community-spring-services-1.0.0-sources.jar`   Исходный код Java для навигации в
-                                                           IDE, отладки и подключения
-                                                           исходников.
+  `alfresco-community-spring-services-1.0.0-sources.jar`   Исходный код Java для
+                                                           навигации в IDE, отладки и
+                                                           подключения исходников.
 
-  `alfresco-community-spring-services-1.0.0-javadoc.jar`   Сгенерированный RU/EN API JavaDoc
-                                                           для IDE и публикации в репозитории.
-  --------------------------------------------------------------------------------------------
+  `alfresco-community-spring-services-1.0.0-javadoc.jar`   Сгенерированный RU/EN API
+                                                           JavaDoc для IDE и
+                                                           публикации в репозитории.
+  -----------------------------------------------------------------------------------
 
 `maven-javadoc-plugin` выполняется на фазе Maven `verify` с
 `failOnError=true`, `failOnWarnings=true` и полностью включённым JDK
@@ -558,9 +559,7 @@ Edition 26.2.0.
 
 ------------------------------------------------------------------------
 
-`<a id="english-version">`{=html}`</a>`{=html}
-
-# English version
+\`# English version
 
 # Alfresco Community Spring Services 1.0.0
 
@@ -586,29 +585,29 @@ The integration suite for this release was executed against the exact
 Docker Compose stack below. These are **verified test-environment
 versions**, not mandatory transitive dependencies of this library.
 
-  -------------------------------------------------------------------------------------------------------
-  Component                           Verified image / version
-  ----------------------------------- -------------------------------------------------------------------
-  `alfresco`                          `docker.io/alfresco/alfresco-content-repository-community:26.2.0`
+  --------------------------------------------------------------------------------------------
+  Component                Verified image / version
+  ------------------------ -------------------------------------------------------------------
+  `alfresco`               `docker.io/alfresco/alfresco-content-repository-community:26.2.0`
 
-  `transform-core-aio`                `alfresco/alfresco-transform-core-aio:5.4.3`
+  `transform-core-aio`     `alfresco/alfresco-transform-core-aio:5.4.3`
 
-  `share`                             `docker.io/alfresco/alfresco-share:26.2.0`
+  `share`                  `docker.io/alfresco/alfresco-share:26.2.0`
 
-  `postgres`                          `postgres:17.9`
+  `postgres`               `postgres:17.9`
 
-  `elasticsearch`                     `elasticsearch:8.17.10`
+  `elasticsearch`          `elasticsearch:8.17.10`
 
-  `kibana`                            `kibana:8.17.10`
+  `kibana`                 `kibana:8.17.10`
 
-  `batch-indexing`                    `docker.io/alfresco/alfresco-elasticsearch-batch-indexing:5.7.0`
+  `batch-indexing`         `docker.io/alfresco/alfresco-elasticsearch-batch-indexing:5.7.0`
 
-  `activemq`                          `docker.io/alfresco/alfresco-activemq:6.2.6-jre17-rockylinux8`
+  `activemq`               `docker.io/alfresco/alfresco-activemq:6.2.6-jre17-rockylinux8`
 
-  `content-app`                       `alfresco/alfresco-content-app:8.0.0`
+  `content-app`            `alfresco/alfresco-content-app:8.0.0`
 
-  `control-center`                    `quay.io/alfresco/alfresco-control-center:11.0.0`
-  -------------------------------------------------------------------------------------------------------
+  `control-center`         `quay.io/alfresco/alfresco-control-center:11.0.0`
+  --------------------------------------------------------------------------------------------
 
 **Traefik (proxy) --- 3.6** A copy of the supplied compose file is
 retained as `docker/community-compose-tested.yaml` as a reference for
@@ -733,18 +732,20 @@ mvn clean verify
 
 A successful build must produce the following artifacts in `target/`:
 
-  --------------------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------------
   Artifact                                                 Purpose
-  -------------------------------------------------------- -----------------------------------
-  `alfresco-community-spring-services-1.0.0.jar`           Main library JAR used as an
-                                                           application dependency.
+  -------------------------------------------------------- --------------------------
+  `alfresco-community-spring-services-1.0.0.jar`           Main library JAR used as
+                                                           an application dependency.
 
-  `alfresco-community-spring-services-1.0.0-sources.jar`   Java sources for IDE navigation,
-                                                           debugging and source attachment.
+  `alfresco-community-spring-services-1.0.0-sources.jar`   Java sources for IDE
+                                                           navigation, debugging and
+                                                           source attachment.
 
-  `alfresco-community-spring-services-1.0.0-javadoc.jar`   Generated RU/EN API JavaDoc for
-                                                           IDEs and repository publication.
-  --------------------------------------------------------------------------------------------
+  `alfresco-community-spring-services-1.0.0-javadoc.jar`   Generated RU/EN API
+                                                           JavaDoc for IDEs and
+                                                           repository publication.
+  -----------------------------------------------------------------------------------
 
 `maven-javadoc-plugin` runs during the Maven `verify` phase with
 `failOnError=true`, `failOnWarnings=true` and full JDK doclint enabled.
